@@ -22,6 +22,7 @@ We finally polish each estimated haplotype using freebayes, generating a consens
 6. map simulated reads fro pirs to both haplotypes, choosing the best match for each
 7. call variants for each haplotype
 8. correct high-quality homozygous calls to the variant allele and emit the FASTAs
+9. use pggb and a subsequent VCF deconstruction to obtain a final genotyping, which we validate versus the truth
 
 ## Usage
 

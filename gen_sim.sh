@@ -100,12 +100,12 @@ paste -d '\n' <(samtools view $simfq.$hap1.bynames.bam) <(samtools view $simfq.$
     | awk -v seed=73 'BEGIN { srand(seed); }
                       NR > 1 && NR % 2 == 0 { if (lastq > $5) {
                          print "a", prev;
-                        } else if ($5 > lastq) { print "b", $0
+                        } else if ($5 > lastq) { print "b", $0;
                         } else { print "c", prev; print "d", $0; } }
                       { prev = $0; lastq=$5; }' > $simfq.$hap1+$hap2.mix.sam
 
-grep '^c' $simfq.$hap1+$hap2.mix.sam | awk '$4 ~ /_0$/' | tr ' ' '\t' | cut -f 2- >>$simfq.$hap1.sam
-grep '^d' $simfq.$hap1+$hap2.mix.sam | awk '$4 ~ /_1$/' | tr ' ' '\t' | cut -f 2- >>$simfq.$hap2.sam
+grep '^c' $simfq.$hap1+$hap2.mix.sam | tr ' ' '\t' | cut -f 2- >>$simfq.$hap1.sam
+grep '^d' $simfq.$hap1+$hap2.mix.sam | tr ' ' '\t' | cut -f 2- >>$simfq.$hap2.sam
 grep '^a' $simfq.$hap1+$hap2.mix.sam | tr ' ' '\t' | cut -f 2- >>$simfq.$hap1.sam
 grep '^b' $simfq.$hap1+$hap2.mix.sam | tr ' ' '\t' | cut -f 2- >>$simfq.$hap2.sam
 
