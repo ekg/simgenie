@@ -101,10 +101,11 @@ paste -d '\n' <(samtools view $simfq.$hap1.bynames.bam) <(samtools view $simfq.$
                       NR > 1 && NR % 2 == 0 { if (lastq > $5) {
                          print "a", prev;
                         } else if ($5 > lastq) { print "b", $0
-                        } else if (rand() > 0.5) { print "a", prev
-                        } else { print "b", $0 } }
+                        } else { print "c", prev; print "d", $0; } }
                       { prev = $0; lastq=$5; }' > $simfq.$hap1+$hap2.mix.sam
 
+grep '^c' $simfq.$hap1+$hap2.mix.sam | awk '$4 ~ /_0$/' | tr ' ' '\t' | cut -f 2- >>$simfq.$hap1.sam
+grep '^d' $simfq.$hap1+$hap2.mix.sam | awk '$4 ~ /_1$/' | tr ' ' '\t' | cut -f 2- >>$simfq.$hap2.sam
 grep '^a' $simfq.$hap1+$hap2.mix.sam | tr ' ' '\t' | cut -f 2- >>$simfq.$hap1.sam
 grep '^b' $simfq.$hap1+$hap2.mix.sam | tr ' ' '\t' | cut -f 2- >>$simfq.$hap2.sam
 
@@ -145,7 +146,7 @@ resultgfagz=$sample.pggb/*.smooth.gfa.gz
 
 ../vcf_extract_phased.sh $resultgfagz $refprefix $threads
 
-vcfkeepsamples $refprefix*.smooth.vcf $sample | sed s/$refprefix\_// | vcffixup - | vcffilter -f 'AC > 0' | bgzip >$sample.calls.pggb.vcf.gz
+vcfkeepsamples $refprefix*.smooth.vcf $sample | vcffilter -f 'LV = 0' | sed s/$refprefix\_// | vcffixup - | vcffilter -f 'AC > 0' | bgzip >$sample.calls.pggb.vcf.gz
 tabix -p vcf $sample.calls.pggb.vcf.gz
 
 rm -rf $sample.calls.pggb.vcf.gz.eval
