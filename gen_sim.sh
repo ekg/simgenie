@@ -39,18 +39,25 @@ samtools faidx $fasta $(odgi paths -i $og -L | grep "^$hap1") >$fasta.$hap1.fa
 samtools faidx $fasta $(odgi paths -i $og -L | grep "^$hap2") >$fasta.$hap2.fa
 #cat $fasta.$hap1.fa $fasta.$hap2.fa >$fasta.$hap1+$hap2.fa
 
-echo "simulate reads (with pirs) from the diploid FASTA"
+echo "simulate reads (with art) from the diploid FASTA"
 
-pirs simulate -d -l 100 -x 30 -t $threads -d -o $prefix.pirs \
-     -B /home/erik/pirs/Profiles/Base-Calling_Profiles/humNew.PE100.matrix.gz \
-     -I /home/erik/pirs/Profiles/InDel_Profiles/phixv2.InDel.matrix \
-     -G /home/erik/pirs/Profiles/GC-depth_Profiles/humNew.gcdep_150.dat \
-     $fasta.$hap1.fa $fasta.$hap2.fa
+art_illumina -i $fasta.$hap1.fa -f 20 -l 150 -m 500 -s 50 -o $prefix.art.$hap1
+art_illumina -i $fasta.$hap2.fa -f 20 -l 150 -m 500 -s 50 -o $prefix.art.$hap2
+
+#pirs simulate -d -l 150 -x 30 -t $threads -d -o $prefix.pirs \
+#     -B /home/erik/pirs/Profiles/Base-Calling_Profiles/humNew.PE100.matrix.gz \
+#     -I /home/erik/pirs/Profiles/InDel_Profiles/phixv2.InDel.matrix \
+#     -G /home/erik/pirs/Profiles/GC-depth_Profiles/humNew.gcdep_150.dat \
+#     $fasta.$hap1.fa $fasta.$hap2.fa
 
 simfq=$prefix.sim.fq
+simfq1=$prefix.sim.1.fq
+simfq2=$prefix.sim.2.fq
 
 #cat $prefix.pirs/*.fq | pigz -p $threads >$simfq
-cat $prefix.pirs/*.fq >$simfq
+cat $prefix.art*.fq >$simfq
+cat $prefix.art*1.fq >$simfq1
+cat $prefix.art*2.fq >$simfq2
 
 echo "apply pangenie to infer the underlying diplotype (estimated_n = $estimated_n)"
 #estimated_n=$(odgi paths -i $og -L | cut -f -2 -d'#' | sort | uniq | wc -l)  # this seems to have marginal effects
@@ -88,8 +95,8 @@ samtools faidx $hap2ref
 bwa index $hap1ref
 bwa index $hap2ref
 
-bwa mem -t $threads $hap1ref $simfq | samtools sort -n >$simfq.$hap1.bynames.bam
-bwa mem -t $threads $hap2ref $simfq | samtools sort -n >$simfq.$hap2.bynames.bam
+bwa mem -t $threads $hap1ref $simfq1 $simfq2 | samtools sort -n >$simfq.$hap1.bynames.bam
+bwa mem -t $threads $hap2ref $simfq2 $simfq2| samtools sort -n >$simfq.$hap2.bynames.bam
 
 # write the SAM headers
 samtools view -H $simfq.$hap1.bynames.bam >$simfq.$hap1.sam
